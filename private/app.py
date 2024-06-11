@@ -78,6 +78,32 @@ def search_naver_news():
 
     return jsonify(articles_data)
 
+#
+
+
+@app.route('/start', methods=['POST'])
+def start():
+    data = request.get_json()
+    frame_data = data['frame']
+    frame = base64.b64decode(frame_data.split(',')[1])
+    np_frame = np.frombuffer(frame, dtype=np.uint8)
+    img = cv2.imdecode(np_frame, cv2.IMREAD_COLOR)
+
+    # 여기서 이미지를 처리합니다.
+    # processed_img = <your_image_processing_function>(img)
+
+    _, buffer = cv2.imencode('.jpg', img)
+    encoded_img = base64.b64encode(buffer).decode('utf-8')
+
+    return jsonify({'processedImage': encoded_img})
+@app.route('/save', methods=['POST'])
+def save_video():
+    file = request.files['video']
+    file.save('recorded_video.webm')
+    return jsonify({'message': 'Video saved successfully'})
+
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=8080)
