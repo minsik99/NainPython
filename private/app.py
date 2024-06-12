@@ -99,7 +99,7 @@ def start():
 @app.route('/save', methods=['POST'])
 def save_video():
     file = request.files['video']
-    file.save('recorded_video.webm')
+    file.save(request.get_json() + '.webm')
     return jsonify({'message': 'Video saved successfully'})
 
 
