@@ -84,21 +84,15 @@ def analysis_video(ivtNo):
                 if hasattr(result2, 'multi_face_landmarks') and result2.multi_face_landmarks:
                     if result2.multi_face_landmarks:
                         for face_landmarks in result2.multi_face_landmarks:
-                            # 눈과 입의 랜드마크 인덱스는 MediaPipe 문서에서 확인할 수 있습니다.
-                            # 예를 들어, 왼쪽 눈은 대략 133, 173, 157, 158, 159, 160, 161, 246 인덱스를 포함합니다.
                             left_eye_indices = [133, 173, 157, 158, 159, 160, 161, 246]
                             right_eye_indices = [362, 398, 384, 385, 386, 387, 388, 468]
                             right_eye_landmarks = [face_landmarks.landmark[i] for i in right_eye_indices]
                             left_eye_landmarks = [face_landmarks.landmark[i] for i in left_eye_indices]
 
-                            # 입은 대략 0, 13, 14, 17, 37, 39, 40, 61, 78, 80, 81, 82, 84, 87, 88, 91, 95, 146, 178, 181, 185, 191, 267, 269, 270, 291, 308, 310, 311, 312, 314, 317, 318, 321, 324 인덱스를 포함합니다.
                             # mouth_indices = [0, 13, 14, 17, 37, 39, 40, 61, 78, 80, 81, 82, 84, 87, 88, 91, 95, 146, 178,
                             #                  181, 185, 191, 267, 269, 270, 291, 308, 310, 311, 312, 314, 317, 318, 321, 324]
                             mouth_indices = [78, 308]
                             mouth_landmarks = [face_landmarks.landmark[i] for i in mouth_indices]
-                            # print('right : ', right_eye_landmarks)
-                            # print('left : ', left_eye_landmarks)
-                            # print('mouse : ', mouth_landmarks)
 
                             x1 = int(face_landmarks.landmark[158].x * image.shape[1])
                             y1 = int(face_landmarks.landmark[158].y * image.shape[0])

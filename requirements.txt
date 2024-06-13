@@ -4,3 +4,6 @@ flask~=2.2.2
 requests
 beautifulsoup4
 Flask-CORS
+selenium
+webdriver_manager
+tensorflow_datasets
