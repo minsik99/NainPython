@@ -36,10 +36,10 @@ def analysis_video(ivtNo):
     def print_result(result: PoseLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
         print('pose landmarker result: {}'.format(result))
 
+
     options = PoseLandmarkerOptions(
         base_options=BaseOptions(model_asset_path=model_path),
-        running_mode=VisionRunningMode.VIDEO,
-        result_callback=print_result)
+        running_mode=VisionRunningMode.VIDEO)
 
     with PoseLandmarker.create_from_options(options) as landmarker:
         warning = False
@@ -71,6 +71,9 @@ def analysis_video(ivtNo):
                     min_tracking_confidence=0.5,
                 )
 
+
+
+
                 # Make Detections
                 results = holistic.process(image)
                 result2 = face_mesh.process(image)
@@ -88,22 +91,15 @@ def analysis_video(ivtNo):
                             right_eye_indices = [362, 398, 384, 385, 386, 387, 388, 468]
                             right_eye_landmarks = [face_landmarks.landmark[i] for i in right_eye_indices]
                             left_eye_landmarks = [face_landmarks.landmark[i] for i in left_eye_indices]
-
-                            # mouth_indices = [0, 13, 14, 17, 37, 39, 40, 61, 78, 80, 81, 82, 84, 87, 88, 91, 95, 146, 178,
-                            #                  181, 185, 191, 267, 269, 270, 291, 308, 310, 311, 312, 314, 317, 318, 321, 324]
+                            mouth_indices = [0, 13, 14, 17, 37, 39, 40, 61, 78, 80, 81, 82, 84, 87, 88, 91, 95, 146, 178,
+                                             181, 185, 191, 267, 269, 270, 291, 308, 310, 311, 312, 314, 317, 318, 321, 324]
                             mouth_indices = [78, 308]
                             mouth_landmarks = [face_landmarks.landmark[i] for i in mouth_indices]
 
-                            x1 = int(face_landmarks.landmark[158].x * image.shape[1])
-                            y1 = int(face_landmarks.landmark[158].y * image.shape[0])
-                            x2 = int(face_landmarks.landmark[145].x * image.shape[1])
-                            y2 = int(face_landmarks.landmark[145].y * image.shape[0])
-                            midpoint = ((x1 + x2) // 2, (y1 + y2) // 2)
-
-                            # Check the color of the midpoint
-                            if not np.array_equal(image[midpoint[1], midpoint[0]], [255, 255, 255]):
-                                cv2.putText(image, 'Great!!',
-                                            (450, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
+                            for i in range(468, 478):  # 홍채의 랜드마크 인덱스
+                                x = int(face_landmarks.landmark[i].x * image.shape[1])
+                                y = int(face_landmarks.landmark[i].y * image.shape[0])
+                                cv2.circle(image, (x, y), 1, (0, 255, 0), -1)
 
                             # 랜드마크를 시각화하거나 추가 처리를 할 수 있습니다.
                             # 예를 들어, 랜드마크를 이미지 위에 그리기:
