@@ -7,3 +7,7 @@ Flask-CORS
 selenium
 webdriver_manager
 tensorflow_datasets
+tensorflow
+tensorflow_datasets
+mediapipe
+Deepface

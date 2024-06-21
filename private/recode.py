@@ -13,16 +13,24 @@ def start():
     np_frame = np.frombuffer(frame, dtype=np.uint8)
     img = cv2.imdecode(np_frame, cv2.IMREAD_COLOR)
 
-    # 여기서 이미지를 처리합니다.
-    # processed_img = <your_image_processing_function>(img)
-
     _, buffer = cv2.imencode('.jpg', img)
     encoded_img = base64.b64encode(buffer).decode('utf-8')
 
     return jsonify({'processedImage': encoded_img})
 
 
+def start_video():
+    cap = cv2.VideoCapture(0)  # 웹캠 사용 (또는 동영상 파일 경로)
 
+    while True:
+        success, frame = cap.read()
+        if not success:
+            break
+        else:
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 def save_video():
     file = request.files['video']
     file.save('videotest.webm')
