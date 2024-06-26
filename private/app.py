@@ -4,6 +4,7 @@ import searchnaver
 import recode
 import company
 import emotion
+import voice
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1", "http://localhost:3000"]}})
@@ -27,6 +28,7 @@ def save():
 
     if file and itvNo:
         response = recode.save_video(file, itvNo)
+        voice.voice_analysis(itvNo, 1, 2)
         return response, 200
     else:
         return jsonify({'error': 'Missing file or itvNo'}), 400
