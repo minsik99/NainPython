@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import searchnaver
 import recode
@@ -12,17 +12,24 @@ CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1", "http://localhost:3
 def search_naver_news():
     return searchnaver.search_naver_news()
 
-@app.route('/start', methods=['POST'])
+@app.route('/realtimeAnalysis', methods=['POST'])
 def start():
-    return recode.start()
+    return recode.video_feed()
 
 @app.route('/startVideo', methods=['POST'])
 def startVideo():
-    return recode.start_video()
-
+    recode.video_feed()
+    
 @app.route('/save', methods=['POST'])
 def save():
-    return recode.save_video()
+    file = request.files.get('video')
+    itvNo = request.form.get('itvNo')
+
+    if file and itvNo:
+        response = recode.save_video(file, itvNo)
+        return response, 200
+    else:
+        return jsonify({'error': 'Missing file or itvNo'}), 400
 
 @app.route('/companylistsearch', methods=['POST'])
 def companysearch():

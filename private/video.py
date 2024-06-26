@@ -9,7 +9,7 @@ import os
 import numpy as np
 import pandas as pd
 import pickle
-def analysis_video(ivtNo):
+def analysis_video(itvNo):
     BaseOptions = mp.tasks.BaseOptions
     PoseLandmarker = mp.tasks.vision.PoseLandmarker
     PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
@@ -56,7 +56,7 @@ def analysis_video(ivtNo):
                 refine_face_landmarks=True) as holistic:
 
 
-                frame = cv2.imread(ivtNo + '.webm', cv2.IMREAD_GRAYSCALE)
+                frame = cv2.imread(itvNo + '.webm', cv2.IMREAD_GRAYSCALE)
                 resize_frame = cv2.resize(frame, None, fx=1.5, fy=1.5, interpolation=cv2.INTER_LINEAR)
                 # Recolor Feed
                 image = cv2.cvtColor(resize_frame, cv2.COLOR_BGR2RGB)
