@@ -3,8 +3,10 @@ from flask_cors import CORS
 import searchnaver
 import recode
 import company
-import emotion
 import voice
+from company import companylist, preload_cache
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1", "http://localhost:3000"]}})
@@ -39,10 +41,10 @@ def companysearch():
     keyword = data.get('keyword')
     return company.companylist(keyword)
 
-@app.route('/emotion', methods=['POST'])
-def emotion():
-    frame = start()
-    return emotion.emotion_analysis(frame)
 
 if __name__ == '__main__':
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(preload_cache, 'cron', hour=2, minute=0)  # 매일 새벽 2시에 실행
+    scheduler.start()
+    company.preload_cache()
     app.run(host='0.0.0.0', debug=True, port=8080)

@@ -13,8 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import requests
 import os
-
-
+KEYWORDS_FILE = 'keywords.txt'
 CACHE_FILE = 'cache.zip'
 
 def load_cache():
@@ -27,6 +26,15 @@ def load_cache():
             except json.JSONDecodeError:
                 return {}
 
+def load_keywords():
+    if not os.path.exists(KEYWORDS_FILE):
+        return []
+    with open(KEYWORDS_FILE, 'r', encoding='utf-8') as f:
+        return [line.strip() for line in f.readlines()]
+def preload_cache():
+    keywords = load_keywords()
+    for keyword in keywords:
+        companylist(keyword)
 
 def save_cache(cache):
     json_data = json.dumps(cache)
