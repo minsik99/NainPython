@@ -11,25 +11,10 @@ import eye
 import sys
 import emotion
 def analyze_video(itvNo):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.abspath(os.path.join(current_dir, '../pose_landmarker_lite.task'))
-    model_path = os.path.normpath(model_path)  # 경로를 정규화합니다.
-
-    print(f"Current Directory: {current_dir}")
-    print(f"Model Path: {model_path}")
-
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model file not found at: {model_path}")
-
-    if current_dir not in sys.path:
-        sys.path.append(current_dir)
-
-    # video.analysis_video 호출 시 경로에서 앞부분을 제거합니다.
-    model_basename = os.path.basename(model_path)
-    corrected_model_path = os.path.join(current_dir, model_basename)
+    # 현재 스크립트 파일의 디렉토리를 가져옵니다.
 
     processed_files = []
-    video.analysis_video(itvNo, processed_files, corrected_model_path)
+    video.analysis_video(itvNo, processed_files)
     processed_files.clear()
     eye.eye_detect(itvNo, processed_files)
     processed_files.clear()
@@ -88,3 +73,7 @@ def start():
     encoded_img = base64.b64encode(buffer).decode('utf-8')
 
     return jsonify({'processedImage': encoded_img})
+
+
+if '__main__' == __name__:
+    analyze_video(1040)

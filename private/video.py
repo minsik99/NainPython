@@ -6,6 +6,11 @@ import numpy as np
 import videoDB as db
 import fileLoad as fl
 import os
+import sys
+
+
+
+
 def calculate_score(angle):
     if 170 <= angle <= 173:
         return 100
@@ -28,12 +33,24 @@ def calculate_angle(a, b):
     angle = np.abs(radians * 180.0 / np.pi)
 
     return angle
-def analysis_video(itvNo, processed_files, corrected_model_path):
+def analysis_video(itvNo, processed_files):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # 파일 존재 여부 확인
-    if not os.path.isfile(corrected_model_path):
-        print(f"Model file not found at: {corrected_model_path}")
-        return
+    # 모델 파일 경로를 설정합니다.
+    model_path = os.path.abspath(os.path.join(current_dir, '..', 'pose_landmarker_lite.task'))
+    model_path = os.path.normpath(model_path)  # 경로를 정규화합니다.
+
+    # 경로 정보를 출력합니다.
+    print(f"Current Directory: {current_dir}")
+    print(f"Model Path: {model_path}")
+
+    # 모델 파일이 존재하는지 확인합니다.
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found at: {model_path}")
+
+    # 현재 디렉토리가 sys.path에 없으면 추가합니다.
+    if current_dir not in sys.path:
+        sys.path.append(current_dir)
 
     BaseOptions = mp.tasks.BaseOptions
     PoseLandmarker = mp.tasks.vision.PoseLandmarker
@@ -43,8 +60,13 @@ def analysis_video(itvNo, processed_files, corrected_model_path):
     mp_pose = mp.solutions.pose
     mp_holistic = mp.solutions.holistic
 
+    with open(model_path, 'rb') as f:
+        model_buffer = f.read()
+
+    base_options = BaseOptions(model_asset_buffer=model_buffer)
+
     options = PoseLandmarkerOptions(
-            base_options=BaseOptions(model_asset_path=corrected_model_path),
+            base_options=base_options,
             running_mode=VisionRunningMode.VIDEO
         )
 
@@ -136,6 +158,3 @@ def analysis_video(itvNo, processed_files, corrected_model_path):
                 cv2.destroyAllWindows()
 
 
-# if __name__ == '__main__':
-#     processed_files = []
-#     analysis_video(1040, processed_files)
