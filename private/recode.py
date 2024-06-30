@@ -6,36 +6,35 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import os
 import re
+import video
+import eye
+import sys
+import emotion
+def analyze_video(itvNo):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.abspath(os.path.join(current_dir, '../pose_landmarker_lite.task'))
+    model_path = os.path.normpath(model_path)  # 경로를 정규화합니다.
 
-def start():
-    data = request.get_json()
-    frame_data = data['frame']
-    frame = base64.b64decode(frame_data.split(',')[1])
-    np_frame = np.frombuffer(frame, dtype=np.uint8)
-    img = cv2.imdecode(np_frame, cv2.IMREAD_COLOR)
+    print(f"Current Directory: {current_dir}")
+    print(f"Model Path: {model_path}")
 
-    _, buffer = cv2.imencode('.jpg', img)
-    encoded_img = base64.b64encode(buffer).decode('utf-8')
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found at: {model_path}")
 
-    return jsonify({'processedImage': encoded_img})
+    if current_dir not in sys.path:
+        sys.path.append(current_dir)
 
+    # video.analysis_video 호출 시 경로에서 앞부분을 제거합니다.
+    model_basename = os.path.basename(model_path)
+    corrected_model_path = os.path.join(current_dir, model_basename)
 
-def start_video():
-    cap = cv2.VideoCapture(0)  # 웹캠 사용 (또는 동영상 파일 경로)
+    processed_files = []
+    video.analysis_video(itvNo, processed_files, corrected_model_path)
+    processed_files.clear()
+    eye.eye_detect(itvNo, processed_files)
+    processed_files.clear()
+    emotion.emotion_analysis(itvNo, processed_files)
 
-    while True:
-        success, frame = cap.read()
-        if not success:
-            break
-        else:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
-def video_feed():
-    return Response(start_video(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def sanitize_filename(filename):
     return re.sub(r'[^a-zA-Z0-9_\-]', '', filename)
@@ -54,4 +53,38 @@ def save_video(file, itvNo):
     # 파일 저장
     file.save(file_path)
 
-    return jsonify({'message': 'Video saved successfully'})
+    already_analyzed = analyze_video(itvNo)
+
+    # 이미 분석된 파일이면 삭제
+    if already_analyzed:
+        os.remove(file_path)
+        print(f"Deleted already analyzed file: {file_path}")
+
+    return file.filename
+
+def video_feed():
+    return Response(start_video(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+def start_video():
+    cap = cv2.VideoCapture(0)  # 웹캠 사용 (또는 동영상 파일 경로)
+
+    while True:
+        success, frame = cap.read()
+        if not success:
+            break
+        else:
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+def start():
+    data = request.get_json()
+    frame_data = data['frame']
+    frame = base64.b64decode(frame_data.split(',')[1])
+    np_frame = np.frombuffer(frame, dtype=np.uint8)
+    img = cv2.imdecode(np_frame, cv2.IMREAD_COLOR)
+
+    _, buffer = cv2.imencode('.jpg', img)
+    encoded_img = base64.b64encode(buffer).decode('utf-8')
+
+    return jsonify({'processedImage': encoded_img})
