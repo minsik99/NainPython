@@ -2,13 +2,10 @@ import cx_Oracle
 
 from connection.dbConnectTemplate import connect, close, commit, rollback
 
-cx_Oracle.init_oracle_client(lib_dir='D:\\instantclient_18_5')
+# cx_Oracle.init_oracle_client(lib_dir='D:\\instantclient_18_5')
 
 
-def insert_score(answer_no, itvNo, itv_type, score):
-
-    conn = connect()  # 데이터베이스 연결 생성
-
+def insert_score(answer_no, itvNo, itv_type, score, conn):
     if conn:
         try:
             cursor = conn.cursor()
@@ -27,12 +24,11 @@ def insert_score(answer_no, itvNo, itv_type, score):
             print('데이터 삽입 실패: ', e)
         finally:
             cursor.close()  # 커서 닫기
-            close(conn)  # 연결 닫기
 
 
-def insert_emotion(answer_no, itvNo, avg_prob, emotion):
-    conn = connect()  # 데이터베이스 연결 생성
 
+def insert_emotion(answer_no, itvNo, avg_prob, emotion, conn):
+    # 데이터베이스 연결 생성
     if conn:
         try:
             cursor = conn.cursor()
@@ -50,5 +46,5 @@ def insert_emotion(answer_no, itvNo, avg_prob, emotion):
             print('감정데이터 삽입 실패: ', e)
         finally:
             cursor.close()  # 커서 닫기
-            close(conn)  # 연결 닫기
+
 

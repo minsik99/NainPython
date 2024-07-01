@@ -7,7 +7,7 @@ import time
 import os
 import videoDB as vdb
 # 최근 N 프레임의 감정 저장
-def emotion_analysis(itvNo, processed_files):
+def emotion_analysis(itvNo, processed_files, conn):
 
     video_data = fl.fileLoad(itvNo, processed_files)
     for video_path, cap, start_time in video_data:
@@ -65,7 +65,7 @@ def emotion_analysis(itvNo, processed_files):
                         for emotion, probs in emotion_results.items():
                             for prob in probs:
                                 rounded_prob = round(prob, 2)
-                                vdb.insert_emotion(answerNo, itvNo, rounded_prob, emotion)
+                                vdb.insert_emotion(answerNo, itvNo, rounded_prob, emotion, conn)
 
                 except Exception as e:
                     print(f"Error: {e}")
