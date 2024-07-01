@@ -12,7 +12,7 @@ def emotion_analysis(itvNo, processed_files, conn):
     video_data = fl.fileLoad(itvNo, processed_files)
     for video_path, cap, start_time in video_data:
 
-        last_timestamp_s = -2
+        last_timestamp_s = -10
         N = 5
         emotion_queue = deque(maxlen=N)
         emotion_result = []
@@ -25,7 +25,7 @@ def emotion_analysis(itvNo, processed_files, conn):
             frame_timestamp_ms = int(cap.get(cv2.CAP_PROP_POS_MSEC))
             frame_timestamp_s = frame_timestamp_ms / 1000
 
-            if frame_timestamp_s >= last_timestamp_s + 2:
+            if frame_timestamp_s >= last_timestamp_s + 10:
                 last_timestamp_s = frame_timestamp_s
 
                 try:
