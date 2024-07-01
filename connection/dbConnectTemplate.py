@@ -12,7 +12,7 @@ user = 'c##NAIN'
 passwd = 'NAIN'
 
 def oracle_init():      # 애플리케이션에서 단 한 번 구동
-    cx_Oracle.init_oracle_client(lib_dir='C:\\instantclient_18_5')
+    cx_Oracle.init_oracle_client(lib_dir='D:\\instantclient_18_5')
     # Mac 에서는 필요 없음
 
 def connect():

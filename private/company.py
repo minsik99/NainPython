@@ -16,6 +16,9 @@ import os
 KEYWORDS_FILE = 'keywords.txt'
 CACHE_FILE = 'cache.zip'
 
+app = Flask(__name__)
+
+
 def load_cache():
     if not os.path.exists(CACHE_FILE):
         return {}
@@ -33,8 +36,9 @@ def load_keywords():
         return [line.strip() for line in f.readlines()]
 def preload_cache():
     keywords = load_keywords()
-    for keyword in keywords:
-        companylist(keyword)
+    with app.app_context():
+        for keyword in keywords:
+            companylist(keyword)
 
 def save_cache(cache):
     json_data = json.dumps(cache)

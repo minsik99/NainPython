@@ -45,7 +45,7 @@ mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(max_num_faces=1, refine_landmarks=True)
 
 # 웹캠 초기화
-def eye_detect(itvNo, processed_files):
+def eye_detect(itvNo, processed_files, conn):
     # MediaPipe 솔루션 초기화
     mp_face_mesh = mp.solutions.face_mesh
     face_mesh = mp_face_mesh.FaceMesh(max_num_faces=1, refine_landmarks=True)
@@ -104,7 +104,7 @@ def eye_detect(itvNo, processed_files):
         if score:
             answerNo = fl.extract_number_from_filename(video_path) + 1
             itv_type = 'EYE'
-            bdb.insert_score(answerNo, itvNo, itv_type, np.mean(score))
+            bdb.insert_score(answerNo, itvNo, itv_type, np.mean(score), conn)
 
         cap.release()
 

@@ -10,21 +10,25 @@ import video
 import eye
 import sys
 import emotion
+import voice
+import connection.dbConnectTemplate as dbtemp
+
 def analyze_video(itvNo):
     # 현재 스크립트 파일의 디렉토리를 가져옵니다.
-
+    conn = dbtemp.connect()
     processed_files = []
-    video.analysis_video(itvNo, processed_files)
+    video.analysis_video(itvNo, processed_files, conn)
     processed_files.clear()
-    eye.eye_detect(itvNo, processed_files)
+    eye.eye_detect(itvNo, processed_files, conn)
     processed_files.clear()
-    emotion.emotion_analysis(itvNo, processed_files)
+    emotion.emotion_analysis(itvNo, processed_files, conn)
+    dbtemp.close(conn)
 
 
 def sanitize_filename(filename):
     return re.sub(r'[^a-zA-Z0-9_\-]', '', filename)
 
-def save_video(file, itvNo):
+def save_video(file, itvNo, qNo):
     upload_folder = sanitize_filename(str(itvNo))
     upload_filename = file.filename
 
@@ -38,12 +42,14 @@ def save_video(file, itvNo):
     # 파일 저장
     file.save(file_path)
 
-    already_analyzed = analyze_video(itvNo)
+    voice.voice_analysis(itvNo, qNo, file.filename)
+    analyze_video(itvNo)
+
 
     # 이미 분석된 파일이면 삭제
-    if already_analyzed:
-        os.remove(file_path)
-        print(f"Deleted already analyzed file: {file_path}")
+    # if already_analyzedV and already_analyzed:
+    #     os.remove(file_path)
+    #     print(f"Deleted already analyzed file: {file_path}")
 
     return file.filename
 
@@ -74,6 +80,3 @@ def start():
 
     return jsonify({'processedImage': encoded_img})
 
-
-if '__main__' == __name__:
-    analyze_video(1040)

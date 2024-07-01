@@ -10,7 +10,6 @@ import sys
 
 
 
-
 def calculate_score(angle):
     if 170 <= angle <= 173:
         return 100
@@ -33,7 +32,8 @@ def calculate_angle(a, b):
     angle = np.abs(radians * 180.0 / np.pi)
 
     return angle
-def analysis_video(itvNo, processed_files):
+def analysis_video(itvNo, processed_files, conn):
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     # 모델 파일 경로를 설정합니다.
@@ -148,7 +148,7 @@ def analysis_video(itvNo, processed_files):
                     answerNo = fl.extract_number_from_filename(video_path) + 1
                     processed_files.append(os.path.basename(video_path))
                     itv_type = 'POS'
-                    db.insert_score(answerNo, itvNo, itv_type, np.mean(score))
+                    db.insert_score(answerNo, itvNo, itv_type, np.mean(score), conn)
 
                 cap.release()
                 end_time = time.time()  # 종료 시간 기록

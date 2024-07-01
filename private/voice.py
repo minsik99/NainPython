@@ -13,7 +13,6 @@ def calculate_vscore(positive, negative):
 
 # def stt(source):
 def voice_analysis(itvNo, qNo, filename):
-
     model = whisper.load_model("base")
     result = model.transcribe(itvNo + "/" + filename)
     # print(result)
@@ -74,7 +73,7 @@ def voice_analysis(itvNo, qNo, filename):
 
     print(voice_list)
 
-    dbtemp.oracle_init()
+    # dbtemp.oracle_init()
     conn = dbtemp.connect()
 
     # "insert into TB_VOICE (VOICE_CONTENT) values (:1)"
