@@ -1,11 +1,15 @@
 # !/usr/bin/env python3
 # -*- codig: utf-8 -*-
-import jsonify
 import requests
 import json
 import whisper
 import connection.dbConnectTemplate as dbtemp
 
+
+def calculate_vscore(positive, negative):
+    neutral = 1 - positive + negative
+    score = positive * 60 - negative * 60 + neutral * 30
+    return score
 
 # def stt(source):
 def voice_analysis(itvNo, qNo, filename):
@@ -78,6 +82,7 @@ def voice_analysis(itvNo, qNo, filename):
     query2 = "insert into TB_VOICE_SENTENCE values (:1, :2, :3, :4, :5)"
     query3 = "select max(voice_no) from TB_VOICE"
     query4 = "select max(vs_no) from TB_VOICE_SENTENCE"
+    query5 = f"update TB_INTERVIEW set voice_score = :1 where itv_no = {itvNo}"
     cursor = conn.cursor()
 
     try:
@@ -98,6 +103,11 @@ def voice_analysis(itvNo, qNo, filename):
         if vs_no is None:
             vs_no = 0
 
+        pCount = 0;
+        nCount = 0;
+
+        pSum = 0;
+        nSum = 0;
         # TB_VOICE_SENTENCE
         for s in voice_list:
             #VS_NO 부여
@@ -106,11 +116,22 @@ def voice_analysis(itvNo, qNo, filename):
             s[1] = voice_no
             print("vs_no 및 voice_no 주입", s)
 
+            if s[4] >= 60:
+                pSum += s[4]
+                pCount += 1
+            elif s[5] >= 60:
+                nSum += s[5]
+                nCount += 1
+
             # VOICE_SETENCE 데이터 튜플 변환 및 쿼리 INSERT
             row = tuple(s)
             print("row", row)
             cursor.execute(query2, row)
-            conn.commit()
+
+        cal = tuple(calculate_vscore(pSum / pCount, nSum / nCount))
+
+        cursor.execute(query5, cal)
+        conn.commit()
         print("커밋 성공")
     except:
         conn.rollback()
@@ -118,6 +139,3 @@ def voice_analysis(itvNo, qNo, filename):
     finally:
         cursor.close()
         dbtemp.close(conn)
-
-
-
