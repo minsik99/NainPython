@@ -27,10 +27,11 @@ def startVideo():
 def save():
     file = request.files.get('video')
     itvNo = request.form.get('itvNo')
+    qNo = request.form.get('qNo')
 
     if file and itvNo:
         response = recode.save_video(file, itvNo)
-        voice.voice_analysis(itvNo, 1, 2)
+        voice.voice_analysis(itvNo, qNo, response)
         return response, 200
     else:
         return jsonify({'error': 'Missing file or itvNo'}), 400
