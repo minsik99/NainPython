@@ -66,7 +66,7 @@ def voice_analysis(itvNo, qNo, filename):
             voice_list.append(each_sentence)
     else:
         print("Error : " + response.text)
-    voice_content = ['', itvNo, 1, content]     # 리스트
+    voice_content = ['', itvNo, qNo, content]     # 리스트
 
     print(voice_list)
 
