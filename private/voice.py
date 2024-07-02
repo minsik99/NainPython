@@ -13,8 +13,16 @@ def calculate_vscore(positive, negative):
 
 # def stt(source):
 def voice_analysis(itvNo, qNo, filename):
+
     model = whisper.load_model("base")
-    result = model.transcribe(itvNo + "/" + filename)
+    file_path = itvNo + "/" + filename
+    # 감지된 언어가 한국어('ko')가 아닐 경우, 명시적으로 한국어로 설정하여 다시 전사합니다.
+    detected_lang = model.transcribe(file_path, fp16=False)['language']
+    if detected_lang != 'ko':
+        result = model.transcribe(file_path, fp16=False, language='ko')
+    else:
+        result = model.transcribe(file_path, fp16=False)
+
     # print(result)
     start_point = result['segments'][0]['start']        # 답변 시작 시간
     end_point = result['segments'][-1]['end']         # 답변 종료 시간
@@ -64,77 +72,63 @@ def voice_analysis(itvNo, qNo, filename):
             print(f"    긍정: {positive}")
             print(f"    중립: {neutral}")
             print()
-            each_sentence = ['', '', sentence, positive, negative]
+            each_sentence = ['', sentence, positive, negative]
             # TB_VOICE_SENTENCE 각 행 저장 list
             voice_list.append(each_sentence)
     else:
         print("Error : " + response.text)
-    voice_content = ['', itvNo, qNo, content]     # 리스트
+    voice_content = (itvNo, qNo, content)
 
-    print(voice_list)
+    print(voice_content)
 
     # dbtemp.oracle_init()
     conn = dbtemp.connect()
-
-    # "insert into TB_VOICE (VOICE_CONTENT) values (:1)"
-    query1 = "insert into TB_VOICE values (:1, :2, :3, :4)"
-    query2 = "insert into TB_VOICE_SENTENCE values (:1, :2, :3, :4, :5)"
-    query3 = "select max(voice_no) from TB_VOICE"
-    query4 = "select max(vs_no) from TB_VOICE_SENTENCE"
-    query5 = f"update TB_INTERVIEW set voice_score = :1 where itv_no = {itvNo}"
     cursor = conn.cursor()
 
+    # "insert into TB_VOICE (VOICE_CONTENT) values (:1)"
+    voice_query = "INSERT INTO TB_VOICE (VOICE_NO, ITV_NO, Q_NO, VOICE_CONTENT) VALUES (SEQ_VOICE_NO.NEXTVAL, :1, :2, :3)"
+    voice_no_q = "SELECT VOICE_NO FROM TB_VOICE WHERE ITV_NO = :1 AND Q_NO = :2"
+    sentence_query = "INSERT INTO TB_VOICE_SENTENCE VALUES (SEQ_VS_NO.NEXTVAL, :1, :2, :3, :4)"
+    interview_query = "UPDATE TB_INTERVIEW SET VOICE_SCORE = :1 WHERE ITV_NO = :2"
+
     try:
-        # VOICE_NO 부여
-        cursor.execute(query3)
+        print("try catch 진입")
+        cursor.execute(voice_query, voice_content)
+        conn.commit()
+        print("voice insert문")
+
+        cursor.execute(voice_no_q, (itvNo, qNo))
         voice_no = cursor.fetchone()[0]
-        if voice_no is None:
-            voice_no = 1
-        voice_content[0] = voice_no
+        print("voice_no select문")
 
-        # VOICE 데이터 튜플 변환 및 쿼리 INSERT
-        voice = tuple(voice_content)
-        cursor.execute(query1, voice)
+        pCount = 0
+        nCount = 0
+        pSum = 0
+        nSum = 0
 
-        # 첫 VS_NO 부여
-        cursor.execute(query4)
-        vs_no = cursor.fetchone()[0]
-        if vs_no is None:
-            vs_no = 0
-
-        pCount = 0;
-        nCount = 0;
-
-        pSum = 0;
-        nSum = 0;
-        # TB_VOICE_SENTENCE
         for s in voice_list:
-            #VS_NO 부여
-            vs_no = vs_no + 1
-            s[0] = vs_no
-            s[1] = voice_no
-            print("vs_no 및 voice_no 주입", s)
-
-            if s[4] >= 60:
-                pSum += s[4]
+            s[0] = voice_no
+            if s[2] >= 60:
+                pSum += s[2]
                 pCount += 1
-            elif s[5] >= 60:
-                nSum += s[5]
+            elif s[3] >= 60:
+                nSum += s[3]
                 nCount += 1
 
-            # VOICE_SETENCE 데이터 튜플 변환 및 쿼리 INSERT
             row = tuple(s)
             print("row", row)
-            cursor.execute(query2, row)
+            cursor.execute(sentence_query, row)
+            print("voice_sentence insert")
 
-        cal = tuple(calculate_vscore(pSum / pCount, nSum / nCount))
+        cal = calculate_vscore(pSum / pCount if pCount else 0, nSum / nCount if nCount else 0)
+        cursor.execute(interview_query, (cal, itvNo))
+        print("interview 테이블 점수 update")
 
-        cursor.execute(query5, cal)
         conn.commit()
         print("커밋 성공")
-    except:
+    except Exception as e:
         conn.rollback()
-        print("커밋 실패")
+        print(f"커밋 실패: {e}")
     finally:
         cursor.close()
         dbtemp.close(conn)
