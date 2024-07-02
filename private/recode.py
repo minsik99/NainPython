@@ -42,7 +42,7 @@ def save_video(file, itvNo, qNo):
     # 파일 저장
     file.save(file_path)
 
-    voice.voice_analysis(itvNo, qNo, file.filename)
+    voice.voice_analysis(itvNo, qNo, upload_filename)
     analyze_video(itvNo)
 
 
