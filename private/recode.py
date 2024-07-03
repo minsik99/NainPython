@@ -12,9 +12,12 @@ import sys
 import emotion
 import voice
 import connection.dbConnectTemplate as dbtemp
+from concurrent.futures import ThreadPoolExecutor
 
-def analyze_video(itvNo):
-    # 현재 스크립트 파일의 디렉토리를 가져옵니다.
+app = Flask(__name__)
+CORS(app)
+
+def analyze_video_async(itvNo):
     conn = dbtemp.connect()
     processed_files = []
     video.analysis_video(itvNo, processed_files, conn)
@@ -24,7 +27,6 @@ def analyze_video(itvNo):
     emotion.emotion_analysis(itvNo, processed_files, conn)
     dbtemp.close(conn)
 
-
 def sanitize_filename(filename):
     return re.sub(r'[^a-zA-Z0-9_\-]', '', filename)
 
@@ -32,30 +34,26 @@ def save_video(file, itvNo, qNo):
     upload_folder = sanitize_filename(str(itvNo))
     upload_filename = file.filename
 
-    # 폴더가 존재하지 않는 경우 생성
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
 
-    # 파일 저장 경로 설정
     file_path = os.path.join(upload_folder, upload_filename)
-
-    # 파일 저장
     file.save(file_path)
 
-    voice.voice_analysis(itvNo, qNo, upload_filename)
-    analyze_video(itvNo)
+    # ThreadPoolExecutor를 사용하여 병렬로 처리
+    with ThreadPoolExecutor() as executor:
+        future1 = executor.submit(voice.voice_analysis, itvNo, qNo, upload_filename)
+        future2 = executor.submit(analyze_video_async, itvNo)
 
-
-    # 이미 분석된 파일이면 삭제
-    # if already_analyzedV and already_analyzed:
-    #     os.remove(file_path)
-    #     print(f"Deleted already analyzed file: {file_path}")
+        # 결과를 기다리지 않고 진행하고자 할 경우 아래와 같이 future 객체 사용
+        # print(future1.result())
+        # print(future2.result())
 
     return file.filename
 
 def video_feed():
-    return Response(start_video(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(start_video(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
 def start_video():
     cap = cv2.VideoCapture(0)  # 웹캠 사용 (또는 동영상 파일 경로)
 
@@ -68,6 +66,7 @@ def start_video():
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
 def start():
     data = request.get_json()
     frame_data = data['frame']
@@ -80,3 +79,5 @@ def start():
 
     return jsonify({'processedImage': encoded_img})
 
+if __name__ == '__main__':
+    app.run(debug=True)

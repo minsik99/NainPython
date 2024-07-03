@@ -92,14 +92,11 @@ def voice_analysis(itvNo, qNo, filename):
     interview_query = "UPDATE TB_INTERVIEW SET VOICE_SCORE = :1 WHERE ITV_NO = :2"
 
     try:
-        print("try catch 진입")
         cursor.execute(voice_query, voice_content)
         conn.commit()
-        print("voice insert문")
 
         cursor.execute(voice_no_q, (itvNo, qNo))
         voice_no = cursor.fetchone()[0]
-        print("voice_no select문")
 
         pCount = 0
         nCount = 0
@@ -118,11 +115,9 @@ def voice_analysis(itvNo, qNo, filename):
             row = tuple(s)
             print("row", row)
             cursor.execute(sentence_query, row)
-            print("voice_sentence insert")
 
         cal = calculate_vscore(pSum / pCount if pCount else 0, nSum / nCount if nCount else 0)
         cursor.execute(interview_query, (cal, itvNo))
-        print("interview 테이블 점수 update")
 
         conn.commit()
         print("커밋 성공")
