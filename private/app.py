@@ -34,7 +34,7 @@ def save():
         response = recode.save_video(file, itvNo, qNo)
         print(f"res{response}")
 
-        return response, 200
+        return jsonify({'success': 'Analysis Succeed'}), 200
     else:
         return jsonify({'error': 'Missing file or itvNo'}), 400
 
