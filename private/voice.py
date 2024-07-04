@@ -7,13 +7,12 @@ import connection.dbConnectTemplate as dbtemp
 
 
 def calculate_vscore(positive, negative):
-    neutral = 1 - positive + negative
-    score = positive * 60 - negative * 60 + neutral * 30
+    score = positive * 30 - negative * 20 + 50
     return score
+
 
 # def stt(source):
 def voice_analysis(itvNo, qNo, filename):
-
     model = whisper.load_model("base")
     file_path = itvNo + "/" + filename
     # 감지된 언어가 한국어('ko')가 아닐 경우, 명시적으로 한국어로 설정하여 다시 전사합니다.
@@ -24,16 +23,16 @@ def voice_analysis(itvNo, qNo, filename):
         result = model.transcribe(file_path, fp16=False)
 
     # print(result)
-    start_point = result['segments'][0]['start']        # 답변 시작 시간
-    end_point = result['segments'][-1]['end']         # 답변 종료 시간
+    start_point = result['segments'][0]['start']  # 답변 시작 시간
+    end_point = result['segments'][-1]['end']  # 답변 종료 시간
     print(f"시작 시간 : {start_point}, 종료 시간 : {end_point}")
     print(result["text"])
 
-    content = result["text"]       # STT 문자열
+    content = result["text"]  # STT 문자열
 
     client_id = "exhnc4vqhw"
     client_secret = "C82anCAZex9PK4XktQLYlUBYwmTodghxMTBwHHCb"
-    url="https://naveropenapi.apigw.ntruss.com/sentiment-analysis/v1/analyze"
+    url = "https://naveropenapi.apigw.ntruss.com/sentiment-analysis/v1/analyze"
     headers = {
         "X-NCP-APIGW-API-KEY-ID": client_id,
         "X-NCP-APIGW-API-KEY": client_secret,
@@ -41,7 +40,7 @@ def voice_analysis(itvNo, qNo, filename):
     }
 
     data = {
-      "content": content
+        "content": content
     }
 
     response = requests.post(url, data=json.dumps(data), headers=headers)
@@ -98,25 +97,31 @@ def voice_analysis(itvNo, qNo, filename):
         cursor.execute(voice_no_q, (itvNo, qNo))
         voice_no = cursor.fetchone()[0]
 
-        pCount = 0
-        nCount = 0
-        pSum = 0
-        nSum = 0
+        p_count = 0
+        n_count = 0
+        p_sum = 0
+        n_sum = 0
 
         for s in voice_list:
             s[0] = voice_no
             if s[2] >= 60:
-                pSum += s[2]
-                pCount += 1
+                p_sum += s[2]
+                p_count += 1
             elif s[3] >= 60:
-                nSum += s[3]
-                nCount += 1
+                n_sum += s[3]
+                n_count += 1
 
             row = tuple(s)
             print("row", row)
             cursor.execute(sentence_query, row)
 
-        cal = calculate_vscore(pSum / pCount if pCount else 0, nSum / nCount if nCount else 0)
+        if p_count == 0:
+            p_count = 1
+
+        if n_count == 0:
+            n_count = 1
+
+        cal = calculate_vscore((p_sum / p_count), (n_sum / n_count))
         cursor.execute(interview_query, (cal, itvNo))
 
         conn.commit()
