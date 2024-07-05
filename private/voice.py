@@ -6,8 +6,11 @@ import whisper
 import connection.dbConnectTemplate as dbtemp
 
 
-def calculate_vscore(positive, negative):
-    score = positive * 30 - negative * 20 + 50
+def calculate_vscore(total_count):
+    score = 80 + total_count * 5
+    if score > 100:
+        score = 100
+
     return score
 
 
@@ -99,29 +102,22 @@ def voice_analysis(itvNo, qNo, filename):
 
         p_count = 0
         n_count = 0
-        p_sum = 0
-        n_sum = 0
+        total_count = 0
 
         for s in voice_list:
             s[0] = voice_no
-            if s[2] >= 60:
-                p_sum += s[2]
+            if s[2] >= 0.6:
                 p_count += 1
-            elif s[3] >= 60:
-                n_sum += s[3]
+            elif s[3] >= 0.6:
                 n_count += 1
 
             row = tuple(s)
             print("row", row)
             cursor.execute(sentence_query, row)
 
-        if p_count == 0:
-            p_count = 1
+        total_count = p_count - n_count
 
-        if n_count == 0:
-            n_count = 1
-
-        cal = calculate_vscore((p_sum / p_count), (n_sum / n_count))
+        cal = calculate_vscore(total_count)
         cursor.execute(interview_query, (cal, itvNo))
 
         conn.commit()
